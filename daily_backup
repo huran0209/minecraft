@@ -1,0 +1,23 @@
+#!/bin/bash
+#	自動ワールドバックアップ
+export PATH=$PATH:/srv/minecraft/bin
+
+# stop server until exiting
+if mcsctl active; then
+	mcsctl say "(starting daily backup)"
+	mcsctl say "The system is going down in 10 minutes and will restart when finished."
+	sleep 10m
+
+	mcsctl say "The system is going down now!"
+	sleep 3s
+
+	mcsctl stop
+	# wait for stop
+	sleep 10s
+
+	# start at exit
+	trap 'mcsctl start' EXIT
+fi
+
+# take backup
+mcsctl backup all
