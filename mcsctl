@@ -63,7 +63,7 @@ function send_string() {
 }
 
 function mcs_is_active() {
-	ps ax| grep "spigot-${VERSION}.jar" &>/dev/null && return 0 || return 1
+	ps ax| grep "[s]pigot-${VERSION}.jar" &>/dev/null && return 0 || return 1
 }
 
 function show_status() {
