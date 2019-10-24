@@ -27,18 +27,19 @@ cat <<EOT
 
 mcsctl [OPTIONS..] {COMMAND} ...
 
-	-v <version>    (defaults: ${VERSION})
+	-v <version>    (default: ${VERSION})
 
-	-m <max_memory> (defaults: ${MAX_MEM})
+	-m <max_memory> (default: ${MAX_MEM})
 
 Unit Commands:
+	active
+	status
+	update
+	generate
 	start
 	stop
-	status
-	active
-	update
-	backup  all|<world name>
 	say	<message>
+	backup  all|<world name>
 EOT
 exit 0
 }
@@ -63,7 +64,7 @@ function send_string() {
 }
 
 function mcs_is_active() {
-	ps ax| grep "[s]pigot-${VERSION}.jar" &>/dev/null && return 0 || return 1
+	ps ax| grep "[s]pigot-" &>/dev/null && return 0 || return 1
 }
 
 function show_status() {
@@ -135,8 +136,7 @@ function backup_all_world() {
 }
 
 
-
-while getopts v:m:h OPT; do
+while getopts v:m:p:h OPT; do
 	case $OPT in 
 		v) VERSION=$OPTARG;;
 		m) MAX_MEM=$OPTARG;;
@@ -146,6 +146,18 @@ done
 shift $(($OPTIND - 1))
 
 case "$1" in
+	'active')
+		mcs_is_active
+		;;
+
+	'status')
+		show_status
+		;;
+
+	'update')
+		update_spigot
+		;;
+
 	'generate')
 		generate_startup
 		;;
@@ -158,16 +170,9 @@ case "$1" in
 		stop_mcs
 		;;
 
-	'status')
-		show_status
-		;;
-
-	'active')
-		mcs_is_active
-		;;
-
-	'update')
-		update_spigot
+	'say')
+		[ -z "$2" ] && usage_exit
+		say "$2"
 		;;
 
 	'backup')
@@ -180,11 +185,6 @@ case "$1" in
 				backup_world "$2"
 				;;
 		esac
-		;;
-
-	'say')
-		[ -z "$2" ] && usage_exit
-		say "$2"
 		;;
 
 	*)
