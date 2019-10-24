@@ -1,6 +1,7 @@
 #!/bin/bash
 #	自動ワールドバックアップ
 export PATH=$PATH:/srv/minecraft/bin
+set -e
 
 # stop server until exiting
 if mcsctl active; then
@@ -21,3 +22,6 @@ fi
 
 # take backup
 mcsctl backup all
+
+# remove files older than one week
+mcsctl remove +7

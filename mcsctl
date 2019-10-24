@@ -40,6 +40,7 @@ Unit Commands:
 	stop
 	say	<message>
 	backup  all|<world name>
+	remove  <days>
 EOT
 exit 0
 }
@@ -135,6 +136,10 @@ function backup_all_world() {
 	done
 }
 
+function remove_backup_files() {
+	find ${BACKUP_DIR} -mtime ${1} -name "*.tar.gz"| xargs rm -f
+}
+
 
 while getopts v:m:p:h OPT; do
 	case $OPT in 
@@ -185,6 +190,11 @@ case "$1" in
 				backup_world "$2"
 				;;
 		esac
+		;;
+
+	'remove')
+		[ -z "$2" ] && usage_exit
+		remove_backup_files $2
 		;;
 
 	*)
