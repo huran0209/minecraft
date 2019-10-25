@@ -137,7 +137,7 @@ function backup_all_world() {
 }
 
 function remove_backup_files() {
-	find ${BACKUP_DIR} -mtime ${1} -name "*.tar.gz"| xargs rm -f
+	find -L ${BACKUP_DIR} -mtime ${1} -name "*.tar.gz"| xargs rm -f
 }
 
 
