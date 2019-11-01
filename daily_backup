@@ -25,3 +25,6 @@ mcsctl backup all
 
 # remove files older than one week
 mcsctl remove +7
+
+# update spigot if necessary
+mcsctl autoupdate
