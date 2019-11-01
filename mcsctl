@@ -18,6 +18,8 @@ VERSION='1.14.4'
 STARTUP=${MC_DIR}/startup
 MAX_MEM='8G'
 
+STDERR=${MC_DIR}/stderr
+
 BACKUP_DIR=${MC_DIR}/backups
 
 
@@ -35,6 +37,7 @@ Unit Commands:
 	active
 	status
 	update
+	autoupdate
 	generate
 	start
 	stop
@@ -76,6 +79,11 @@ function get_buildtools() {
 	curl -o ${BUILD_DIR}/BuildTools.jar ${URL}
 }
 
+function is_outdated() {
+	[ ! -e $STDERR ] && return 1
+	grep "this build is outdated" $STDERR &>/dev/null
+}
+
 function update_spigot() {
 	get_buildtools
 	(cd ${BUILD_DIR} && java -jar BuildTools.jar -rev ${VERSION})
@@ -98,7 +106,7 @@ function start_mcs() {
 	mcs_is_active && return 0
 	[ ! -e ${STARTUP} ] && generate_startup
 	launch_screen ${SESSION}
-	send_string ${SESSION} "cd ${MC_DIR} && ./$(basename ${STARTUP})"
+	send_string ${SESSION} "cd ${MC_DIR} && ./$(basename ${STARTUP}) 2>${STDERR}"
 }
 
 function stop_mcs() {
@@ -161,6 +169,10 @@ case "$1" in
 
 	'update')
 		update_spigot
+		;;
+
+	'autoupdate')
+		is_outdated && update_spigot
 		;;
 
 	'generate')
