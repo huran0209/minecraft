@@ -16,7 +16,7 @@ URL='https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifac
 VERSION='1.14.4'
 
 STARTUP=${MC_DIR}/startup
-MAX_MEM='1G'
+MAX_MEM='8G'
 
 BACKUP_DIR=${MC_DIR}/backups
 
