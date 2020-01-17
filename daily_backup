@@ -3,6 +3,11 @@
 export PATH=$PATH:/srv/minecraft/bin
 set -e
 
+# skip if no one is logged in from the previous restart
+if mcsctl nologin; then
+	exit 0
+fi
+
 # stop server until exiting
 if mcsctl active; then
 	mcsctl say "(starting daily backup)"
@@ -20,11 +25,11 @@ if mcsctl active; then
 	trap 'mcsctl start' EXIT
 fi
 
-# take backup
+# take backup all worlds
 mcsctl backup all
 
-# remove files older than one week
-mcsctl remove +7
+# remove files older than one month
+mcsctl remove +30
 
 # update spigot if necessary
 mcsctl autoupdate

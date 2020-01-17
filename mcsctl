@@ -18,6 +18,7 @@ VERSION='1.14.4'
 STARTUP=${MC_DIR}/startup
 MAX_MEM='8G'
 
+LATEST_LOG=${MC_DIR}/logs/latest.log
 STDERR=${MC_DIR}/stderr
 
 BACKUP_DIR=${MC_DIR}/backups
@@ -42,6 +43,7 @@ Unit Commands:
 	start
 	stop
 	say	<message>
+	nologin
 	backup  all|<world name>
 	remove  <days>
 EOT
@@ -145,7 +147,19 @@ function backup_all_world() {
 }
 
 function remove_backup_files() {
+	#  $1: day
+	if [[ ! "$1" =~ ^\+ ]]; then
+		echo "E: the argument should start with +" 1>&2
+		return 1
+	fi
 	find -L ${BACKUP_DIR} -mtime ${1} -name "*.tar.gz"| xargs rm -f
+}
+
+function is_nologin() {
+	if [ ! -e $LATEST_LOG ]; then
+		return 1
+	fi
+	! grep "User Authenticator" $LATEST_LOG &>/dev/null
 }
 
 
@@ -190,6 +204,10 @@ case "$1" in
 	'say')
 		[ -z "$2" ] && usage_exit
 		say "$2"
+		;;
+
+	'nologin')
+		is_nologin
 		;;
 
 	'backup')
