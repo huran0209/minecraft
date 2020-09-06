@@ -99,7 +99,10 @@ function is_outdated() {
 
 function update_spigot() {
 	get_buildtools
+	find ${BUILD_DIR}/ -maxdepth 1 -name 'spigot-*.jar'| xargs rm -f
 	(cd ${BUILD_DIR} && java -jar BuildTools.jar -rev ${VERSION})
+
+	find ${MC_DIR}/ -maxdepth 1 -name 'spigot-*.jar'| xargs rm -f
 	cp -f "${BUILD_DIR}/spigot-${VERSION}.jar" ${MC_DIR}/
 }
 
