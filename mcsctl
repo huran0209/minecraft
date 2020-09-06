@@ -4,6 +4,19 @@ set -eu
 
 # defaults
 SESSION='mc'
+VERSION='1.16.2'
+MAX_MEM='4G'
+
+if [ ! -r ./config ]; then
+	cat >./config <<-EOT
+	# minecraft(Java Edition) version
+	VERSION=${VERSION}
+
+	# maximum memory
+	MAX_MEM=${MAX_MEM}
+	EOT
+fi
+source ./config
 
 MC_DIR=/srv/minecraft
 if [ ! -d $MC_DIR ]; then
@@ -13,10 +26,8 @@ fi
 
 BUILD_DIR=${MC_DIR}/buildtools
 URL='https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar'
-VERSION='1.14.4'
 
 STARTUP=${MC_DIR}/startup
-MAX_MEM='8G'
 
 LATEST_LOG=${MC_DIR}/logs/latest.log
 STDERR=${MC_DIR}/stderr
