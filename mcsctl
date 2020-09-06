@@ -27,7 +27,7 @@ fi
 BUILD_DIR=${MC_DIR}/buildtools
 URL='https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar'
 
-STARTUP=${MC_DIR}/startup
+STARTUP=${MC_DIR}/startup-${VERSION}
 
 LATEST_LOG=${MC_DIR}/logs/latest.log
 STDERR=${MC_DIR}/stderr
@@ -110,6 +110,7 @@ function generate_startup() {
 	spigot="spigot-${VERSION}.jar"
 	[ ! -e ${MC_DIR}/${spigot} ] && update_spigot
 	
+	find ${MC_DIR}/ -maxdepth 1 -name 'startup-*'| xargs rm -f
 	cat >${STARTUP} <<-EOT
 	#!/bin/bash
 
