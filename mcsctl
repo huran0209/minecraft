@@ -29,7 +29,7 @@ URL='https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifac
 
 STARTUP=${MC_DIR}/startup-${VERSION}
 
-LATEST_LOG=${MC_DIR}/logs/latest.log
+LOG_DIR=${MC_DIR}/logs
 STDERR=${MC_DIR}/stderr
 
 BACKUP_DIR=${MC_DIR}/backups
@@ -171,10 +171,8 @@ function remove_backup_files() {
 }
 
 function is_nologin() {
-	if [ ! -e $LATEST_LOG ]; then
-		return 1
-	fi
-	! grep "User Authenticator" $LATEST_LOG &>/dev/null
+	local header=$(date --date 'yesterday' "+%Y-%m-%d")
+	! zcat ${LOG_DIR}/${header}-*.log.gz| grep "User Auth" &>/dev/null
 }
 
 
