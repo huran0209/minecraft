@@ -11,6 +11,8 @@ seed: 2744398826613602129
 seed: -1389479166666961441
 
 ## plugins
+- WorldEdit (https://dev.bukkit.org/projects/worldedit)  
+
 - WorldBorder (https://www.spigotmc.org/resources/worldborder.60905/)  
 メインワールドの大きさをr=4000に制限
 ```
@@ -31,6 +33,9 @@ seed: -1389479166666961441
 
 - LunaChat (https://github.com/ucchyocean/LunaChat/releases)  
 日本語チャット支援
+
+- EditableSign (https://www.spigotmc.org/resources/editablesign.2502/)  
+看板の編集を可能に
 
 - UltimateTimber (https://songoda.com/marketplace/product/ultimatetimber-the-realistic-tree-chopper.18)  
 木こり(*資源ワールドでのみ有効)
