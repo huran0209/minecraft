@@ -128,6 +128,7 @@ function start_mcs() {
 
 function stop_mcs() {
 	send_string ${SESSION} "stop"
+	rm -f ${STDERR}
 }
 
 function say() {
