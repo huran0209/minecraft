@@ -1,14 +1,26 @@
 # minecraft server
-## worlds
-Game Mode: SURVIVAL  
-Difficulty: EASY  
-毎日5:00にバックアップを実行
+## server情報
+- cpu: Xeon E3-1220 v6 @ 3.0GHz
+- memory: DDR4-2400 (4GBを割当)
+- storage: WD Blue 3D NAND SATA SSD
 
-- メインワールド  
-seed: 2744398826613602129
+## world情報
+- Game Mode: SURVIVAL  
+- Difficulty: EASY  
+- 毎日5:00にバックアップを実行
 
-- 資源ワールド  
-seed: -1389479166666961441
+### world (初期ワールド)
+- version: 1.14
+- seed: 2744398826613602129
+
+### resource_world(資源ワールド)
+定期的にリセットする予定
+- version: 1.14
+- seed: -1389479166666961441
+
+### nether_update
+メインワールド追加
+- version: 1.16
 
 ## plugins
 - WorldEdit (https://dev.bukkit.org/projects/worldedit)  
