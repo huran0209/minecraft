@@ -62,8 +62,10 @@ exit 0
 }
 [[ $UID -ne 0 || $# -eq 0 ]] && usage_exit
 
-
 function screen_is_active() {
+  if [ ! -e /run/screen/S-root ]; then
+    return 1
+  fi
 	# $1: session_name
 	local socket=$(find /run/screen/S-root/ -name "*.${1}")
 	[ -n "${socket}" ] && return 0 || return 1
@@ -117,6 +119,11 @@ function generate_startup() {
 	java -Xmx${MAX_MEM} -Xms${MAX_MEM} -jar ${spigot} nogui 
 	EOT
 	chmod +x ${STARTUP}
+
+  EULA="${MC_DIR}/eula.txt"
+  if [ ! -e $EULA ]; then
+    echo 'eula=true' >$EULA
+  fi
 }
 
 function start_mcs() {
@@ -173,6 +180,7 @@ function remove_backup_files() {
 
 function is_nologin() {
 	local header=$(date --date 'yesterday' "+%Y-%m-%d")
+  # ファイルが存在しない場合も0を返す?
 	! zcat ${LOG_DIR}/${header}-*.log.gz| grep "User Auth" &>/dev/null
 }
 
