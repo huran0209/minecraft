@@ -111,12 +111,12 @@ function update_spigot() {
 function generate_startup() {
 	spigot="spigot-${VERSION}.jar"
 	[ ! -e ${MC_DIR}/${spigot} ] && update_spigot
-	
+
 	find ${MC_DIR}/ -maxdepth 1 -name 'startup-*'| xargs rm -f
 	cat >${STARTUP} <<-EOT
 	#!/bin/bash
 
-	java -Xmx${MAX_MEM} -Xms${MAX_MEM} -jar ${spigot} nogui 
+	java -Xmx${MAX_MEM} -Xms${MAX_MEM} -jar ${spigot} nogui
 	EOT
 	chmod +x ${STARTUP}
 
@@ -186,7 +186,7 @@ function is_nologin() {
 
 
 while getopts v:m:p:h OPT; do
-	case $OPT in 
+	case $OPT in
 		v) VERSION=$OPTARG;;
 		m) MAX_MEM=$OPTARG;;
 		h) usage_exit;;

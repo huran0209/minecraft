@@ -1,0 +1,43 @@
+version: "3"
+
+services:
+  mc:
+    image: itzg/minecraft-server
+    ports:
+      - "25565:25565"
+      - "127.0.0.1:25575:25575"
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - ./data:/data
+    environment:
+      EULA: "TRUE"
+      TYPE: "SPIGOT"
+      MAX_MEMORY: "8G"
+      ENABLE_RCON: "true"
+      RCON_PASSWORD: "testing"
+      RCON_PORT: 25575
+    tty: true
+    stdin_open: true
+    restart: always
+
+  wa:
+    image: itzg/rcon
+    ports:
+      - "127.0.0.1:4326-4327:4326-4327"
+    volumes:
+      - db:/opt/rcon-web-admin/db
+    env_file:
+      - ./rcon.env
+    restart: always
+
+#  crond:
+#    build: ./crond
+#    env_file:
+#      - ./rcon.env
+#    volumes:
+#      - /etc/localtime:/etc/localtime:ro
+#      - ./data:/mnt/src:ro
+#      - {backup_dir}:/mnt/dest:rw
+
+volumes:
+  db:
