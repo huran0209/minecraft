@@ -32,7 +32,6 @@ def exec_sync():
         "rsync -a",
         "{}/".format(src_dir),
         "{}/".format(dest_dir),
-        "--exclude='buildtools'",
         "--exclude='logs'",
         "--exclude='plugins'",
         "--exclude='spigot_server-*.jar'",
