@@ -19,12 +19,14 @@ def exec_sync():
     src_dir = Path("/mnt/src")
     if not src_dir.exists():
         emsg = "not found {}".format(src_dir)
-        raise ValueError(emsg)
+        print(emsg)
+        return False
 
     dest_dir = Path("/mnt/dest")
     if not dest_dir.exists():
         emsg = "not found {}".format(dest_dir)
-        raise ValueError(emsg)
+        print(emsg)
+        return False
 
     shell_cmd = [
         "rsync -a",
@@ -35,7 +37,11 @@ def exec_sync():
         "--exclude='plugins'",
         "--exclude='spigot_server-*.jar'",
     ]
-    subprocess.run(" ".join(shell_cmd), shell=True, check=True)
+    res = subprocess.run(" ".join(shell_cmd), shell=True)
+    if res.returncode == 0:
+        return True
+    else:
+        return False
 
 
 host = getenv("RWA_RCON_HOST")
@@ -64,10 +70,14 @@ with MCRcon(host, password, int(port)) as mcr:
     # backup data
     msg = "exporting data..."
     mcr.command("say {}".format(msg))
-    exec_sync()
+
+    result = exec_sync()
+    if result:
+        msg = "done!"
+        mcr.command("say {}".format(msg))
+    else:
+        msg = "somthing went wrong, please check the docker log."
+        mcr.command("say {}".format(msg))
 
     # enables the server writing to the world files
     mcr.command("save-on")
-
-    msg = "done!"
-    mcr.command("say {}".format(msg))
