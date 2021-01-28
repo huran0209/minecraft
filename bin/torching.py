@@ -32,7 +32,7 @@ def get_settings():
 
 class Torching(object):
 
-    def __init__(self, mcr, mod=6, dri=2, dy_max=1):
+    def __init__(self, mcr, mod=6, dn=2, dy_max=1):
         """
         Parmeters
         ---------
@@ -41,7 +41,7 @@ class Torching(object):
         mod : int, optional (default=6)
             何マスおきに松明を設置するか
 
-        dri : int, optional (default=2)
+        dn : int, optional (default=2)
             一度にplayerの周囲何本分先まで松明を設置するか
 
         dy_max : int, optional (default=1)
@@ -49,16 +49,16 @@ class Torching(object):
 
         Note
         ----
-        1人のPlayerだけがloginしている状況を想定
+        1人のplayerだけがloginしている状況を想定
         """
         self.mcr = mcr
         self.mod = mod
-        self.dri = dri
+        self.dn = dn
         self.dy_max = dy_max
 
-        # '{player} has the following entity data: "minecraft:{world_name}"'
-        # から{world_name}を抜き出す正規表現
-        self.world = re.compile(r'(?<=minecraft:).*(?=")')
+        # '{player} has the following entity data: "minecraft:{data}"'
+        # から{data}を抜き出す正規表現
+        self.entity = re.compile(r'(?<=minecraft:).*(?=")')
 
         # '{player} has the following entity data: [{x}d, {y}d, {z}d]'
         # から{x}d, {y}d, {z}dを抜き出す正規表現
@@ -81,19 +81,42 @@ class Torching(object):
             print(f"response: {res}")
         return res
 
-    def load_world_name(self):
+    def what_in_the_left(self):
         """
-        Load the current world name in which the player is.
+        Return what the player have in the left hand.
+
+        Returns
+        -------
+        block_name : str
+        """
+
+        res = self._run("data get entity @p Inventory[{Slot:-106b}].id")
+        if res == "No entity was found":
+            raise SystemExit(res)
+        if res.startswith("Found no elements"):
+            # empty
+            return ""
+        block_name = self.entity.search(res).group(0)
+        return block_name
+
+    def get_world_name(self):
+        """
+        Return the current world name in which the player is.
+
+        Returns
+        -------
+        wn : str
         """
 
         res = self._run("data get entity @p Dimension")
         if res == "No entity was found":
             raise SystemExit(res)
-        self.wn = self.world.search(res).group(0)
+        wn = self.entity.search(res).group(0)
+        return wn
 
     def get_current_position(self):
         """
-        Get the player current position.
+        Return the current player position.
 
         Returns
         -------
@@ -112,12 +135,15 @@ class Torching(object):
         xp, yp, zp = [float(s.strip()) for s in pos_array]
         return xp, yp, zp
 
-    def on_the_ground(self, x, y, z):
+    def on_the_ground(self, wn, x, y, z):
         """
         Check whether (x, y, z) is on the ground.
 
         Parameters
         ----------
+        wn : int
+            world name
+
         x : int
 
         y : int
@@ -129,18 +155,20 @@ class Torching(object):
         out : bool
         """
         # 1個下が草ブロックなら
-        res = self._run(f"execute in minecraft:{self.wn} if block {x} {y-1} {z} minecraft:grass_block")
+        res = self._run(f"execute in minecraft:{wn} if block {x} {y-1} {z} minecraft:grass_block")
         if res == 'Test passed':
             return True
         else:
             return False
 
-    def _set_torch(self, x, y, z):
+    def _set_torch(self, wn, x, y, z):
         """
         Set torch if (x, y, z) is air and (x, y-1, z) is grass block.
 
         Parameters
         ----------
+        wn : str
+
         x : int
 
         y : int
@@ -155,22 +183,22 @@ class Torching(object):
            -1 - (x, y, z) is air but not on the ground, you should try on lower.
         """
 
-        res = self._run(f"execute in minecraft:{self.wn} if block {x} {y} {z} minecraft:torch")
+        res = self._run(f"execute in minecraft:{wn} if block {x} {y} {z} minecraft:torch")
         if res == 'Test passed':
             # already exists
             return 0
 
         # 草が生えていたら十分条件
-        res = self._run(f"execute in minecraft:{self.wn} if block {x} {y} {z} minecraft:grass run fill {x} {y} {z} {x} {y} {z} minecraft:torch")
-        if res.startswith('Successfully'):
+        res = self._run(f"execute in minecraft:{wn} if block {x} {y} {z} minecraft:grass run setblock {x} {y} {z} minecraft:torch")
+        if res.startswith("Changed the block"):
             return 0
 
-        res = self._run(f"execute in minecraft:{self.wn} if block {x} {y} {z} minecraft:air")
+        res = self._run(f"execute in minecraft:{wn} if block {x} {y} {z} minecraft:air")
         if res == 'Test passed':
 
             # 空気ブロックかつ一個下が草ブロックなら
-            res = self._run(f"execute in minecraft:{self.wn} if block {x} {y-1} {z} minecraft:grass_block run fill {x} {y} {z} {x} {y} {z} minecraft:torch")
-            if res.startswith('Successfully'):
+            res = self._run(f"execute in minecraft:{wn} if block {x} {y-1} {z} minecraft:grass_block run setblock {x} {y} {z} minecraft:torch")
+            if res.startswith("Changed the block"):
                 return 0
 
             else:
@@ -181,10 +209,10 @@ class Torching(object):
             # 空気ブロックじゃない場合
             return 1
 
-    def search_ground_and_set(self, x, y, z):
+    def search_ground_and_set(self, wn, x, y, z):
         """
         (x, y, z)に松明を設置
-        設置できなかった場合はdy_maxの範囲で上下方向に地面を探索して松明を設置
+        設置できなかった場合は{self.dy_max}の範囲で上下方向に地面を探索して設置
 
         Parameters
         ----------
@@ -195,7 +223,7 @@ class Torching(object):
         z : int
         """
 
-        res = self._set_torch(x, y, z)
+        res = self._set_torch(wn, x, y, z)
         if res == 0:
             # success
             return
@@ -205,13 +233,13 @@ class Torching(object):
         #   bit = -1 : downward
         bit = res
         for dy in range(self.dy_max):
-            res = self._set_torch(x, y+(bit)*(dy+1), z)
+            res = self._set_torch(wn, x, y+(bit)*(dy+1), z)
             if res == 0:
                 return
 
     def _exec(self, xp, yp, zp):
         """
-        playerの周囲に松明を設置
+        playerが草ブロックの上にいるとき、{self.mod}の倍数の位置にだけ松明を設置
         (ただし、建築の妨害をしないためにpalyerに一番近い場所には設置しない)
 
         Parammeters
@@ -226,12 +254,12 @@ class Torching(object):
             player position 2
         """
 
-        # load the current world name
-        self.load_world_name()
+        # get the current world name
+        wn = self.get_world_name()
 
         # int <- float
         x, y, z = [int(p) for p in [xp, yp, zp]]
-        if not self.on_the_ground(x, y, z):
+        if not self.on_the_ground(wn, x, y, z):
             # the player is not on the ground, skip
             return
 
@@ -240,8 +268,8 @@ class Torching(object):
         zj = round(zp/self.mod)
 
         # walk around the player
-        for i in range(-self.dri, self.dri+1):
-            for j in range(-self.dri, self.dri+1):
+        for i in range(-self.dn, self.dn+1):
+            for j in range(-self.dn, self.dn+1):
                 if i == 0 and j == 0:
                     # skip the nearest one
                     continue
@@ -250,11 +278,12 @@ class Torching(object):
                 x = (xi + i)*self.mod
                 z = (zj + j)*self.mod
 
-                # self.modの倍数の位置にのみ設置
-                self.search_ground_and_set(x, y, z)
+                self.search_ground_and_set(wn, x, y, z)
 
     def main(self, dt=1.0):
         """
+        playerが左手に松明を持っているときにだけ実行
+
         Parameters
         ----------
         dt : float, optional (default=1.0)
@@ -262,17 +291,22 @@ class Torching(object):
             (小さくしすぎると高負荷)
         """
 
-        # get at the first
-        xp, yp, zp = self.get_current_position()
+        # initialize
+        xp, yp, zp = 0, 0, 0
 
         # infinite loop
         while True:
 
-            # store the previous value
-            xp_old, yp_old, zp_old = xp, yp, zp
-
             # take interval
             time.sleep(dt)
+
+            # skip if torch is not in the left
+            block_name = self.what_in_the_left()
+            if not block_name == "torch":
+                continue
+
+            # store the previous value
+            xp_old, yp_old, zp_old = xp, yp, zp
 
             # reload
             xp, yp, zp = self.get_current_position()
