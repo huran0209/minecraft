@@ -1,52 +1,47 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import os
-import time
 import subprocess
+import time
 from mcrcon import MCRcon
 from pathlib import Path
 
 
-def getenv(key):
-    value = os.getenv(key)
-    if value is None:
-        emsg = "E: not found {} in env!".format(key)
-        raise ValueError(emsg)
-    return value
-
-
-def exec_sync():
-    src_dir = Path("/mnt/src")
+def exec_sync(src_dir="/mnt/src", dest_dir="/mnt/backup/daily_backup"):
+    """
+    src_dirをdest_dirにsync
+    """
+    src_dir = Path(src_dir)
     if not src_dir.exists():
         emsg = "not found {}".format(src_dir)
         print(emsg)
         return False
 
-    dest_dir = Path("/mnt/dest")
-    if not dest_dir.exists():
-        emsg = "not found {}".format(dest_dir)
+    dest_dir = Path(dest_dir)
+    root_dir = dest_dir.parent
+    if not root_dir.exists():
+        emsg = "not found {}".format(root_dir)
         print(emsg)
         return False
 
+    if not dest_dir.exists():
+        dest_dir.mkdir()
+
     shell_cmd = [
-        "rsync -a",
+        "rsync -a --delete",
         "{}/".format(src_dir),
         "{}/".format(dest_dir),
         "--exclude='logs'",
-        "--exclude='plugins'",
         "--exclude='spigot_server-*.jar'",
     ]
     res = subprocess.run(" ".join(shell_cmd), shell=True)
-    if res.returncode == 0:
-        return True
-    else:
-        return False
+    res.check_returncode()
 
 
-host = getenv("RWA_RCON_HOST")
-port = getenv("RWA_RCON_PORT")
-password = getenv("RWA_RCON_PASSWORD")
 # connect
+host = os.environ["RWA_RCON_HOST"]
+port = os.environ["RWA_RCON_PORT"]
+password = os.environ["RWA_RCON_PASSWORD"]
 with MCRcon(host, password, int(port)) as mcr:
 
     msg = "The daily backup script has been launched,"
@@ -58,7 +53,8 @@ with MCRcon(host, password, int(port)) as mcr:
     # count down
     for i in range(4, 0, -1):
         time.sleep(1)
-        mcr.command("say {}".format(i))
+        msg = str(i)
+        mcr.command("say {}".format(msg))
 
     # save
     mcr.command("save-all flush")
@@ -66,17 +62,19 @@ with MCRcon(host, password, int(port)) as mcr:
     # disable the server writing to the world files
     mcr.command("save-off")
 
-    # backup data
-    msg = "exporting data..."
-    mcr.command("say {}".format(msg))
+    try:
+        # backup data
+        msg = "exporting data..."
+        mcr.command("say {}".format(msg))
 
-    result = exec_sync()
-    if result:
+        result = exec_sync()
         msg = "done!"
         mcr.command("say {}".format(msg))
-    else:
-        msg = "somthing went wrong, please check the docker log."
+
+    except subprocess.CalledProcessError:
+        msg = "somthing went wrong, please contact the system administrator."
         mcr.command("say {}".format(msg))
 
-    # enables the server writing to the world files
-    mcr.command("save-on")
+    finally:
+        # enables the server writing to the world files
+        mcr.command("save-on")

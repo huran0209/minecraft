@@ -1,0 +1,53 @@
+#!/bin/sh
+set -eu
+
+# settings
+ROOT_DIR="/mnt/backup"
+TARGET_DIR="$ROOT_DIR/daily_backup"
+PLUGINS="$TARGET_DIR/plugins"
+STORE_DIR="$ROOT_DIR/archives"
+
+
+function backup_world() {
+  local world_name=$1
+  local world_dir="${TARGET_DIR}/$world_name"
+  if [ ! -d $world_dir ]; then
+    echo "E: not found such a world ($world_name)." 1>&2
+    return 0
+  fi
+
+  local compressed_file="${STORE_DIR}/${world_name}_$(date +%Y%m%d).tar.gz"
+  tar -czf ${compressed_file} ${world_dir}/
+}
+
+function get_world_list() {
+  local worlds="$PLUGINS/Multiverse-Core/worlds.yml"
+  if [ ! -e $worlds ]; then
+    echo "E: not found worlds.yml." 1>&2
+    return 1
+  fi
+
+  cat $worlds| yq -r ".[]| keys| .[]"
+}
+
+function backup_all_world() {
+  if [ ! -d $STORE_DIR ]; then
+    mkdir $STORE_DIR
+  fi
+
+  get_world_list| while read world; do
+    backup_world $world
+  done
+}
+
+function remove_old_archives() {
+  local day=$1
+  find -L ${STORE_DIR} -mtime ${day} -name "*.tar.gz"| xargs rm -f
+}
+
+
+# worldをアーカイブ化
+backup_all_world
+
+# 30日以上前のファイルは削除
+remove_old_archives +30
