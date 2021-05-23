@@ -242,7 +242,7 @@ class Torching(object):
         playerが草ブロックの上にいるとき、{self.mod}の倍数の位置にだけ松明を設置
         (ただし、建築の妨害をしないためにpalyerに一番近い場所には設置しない)
 
-        Parammeters
+        Parameters
         -----------
         xp : float
             player position 0
