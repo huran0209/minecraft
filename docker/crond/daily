@@ -14,15 +14,13 @@ def exec_sync(src_dir="/mnt/src", dest_dir="/mnt/backup/daily_backup"):
     src_dir = Path(src_dir)
     if not src_dir.exists():
         emsg = "not found {}".format(src_dir)
-        print(emsg)
-        return False
+        raise ValueError(emsg)
 
     dest_dir = Path(dest_dir)
     root_dir = dest_dir.parent
     if not root_dir.exists():
         emsg = "not found {}".format(root_dir)
-        print(emsg)
-        return False
+        raise ValueError(emsg)
 
     if not dest_dir.exists():
         dest_dir.mkdir()
@@ -66,13 +64,14 @@ with MCRcon(host, password, int(port)) as mcr:
         # backup data
         msg = "exporting data..."
         mcr.command("say {}".format(msg))
+        exec_sync()
 
-        result = exec_sync()
-        msg = "done!"
+    except (ValueError, subprocess.CalledProcessError):
+        msg = "somthing went wrong, please contact the system administrator."
         mcr.command("say {}".format(msg))
 
-    except subprocess.CalledProcessError:
-        msg = "somthing went wrong, please contact the system administrator."
+    else:
+        msg = "done!"
         mcr.command("say {}".format(msg))
 
     finally:
